@@ -44,5 +44,19 @@ export * from './api';
 // Lib/Utils
 export * from './lib';
 
-// Constants
-export * from './constants';
+// Constants - only export constants, not types (types already exported from ./types)
+export {
+  API_CONFIG,
+  API_ENDPOINTS,
+  API_CODES,
+  ERROR_MESSAGES,
+  STATI_CONTRATTO,
+  STATI_PAGAMENTO,
+  TIPI_CLIENTE,
+  COMMODITY,
+  CANALI,
+  CATEGORIE_OFFERTA,
+  STATI_OFFERTA,
+  TECNOLOGIE_TELCO,
+  PERIODI_FATTURAZIONE,
+} from './constants';

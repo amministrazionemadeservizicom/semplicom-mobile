@@ -226,9 +226,6 @@ export default function OffertaDetailScreen() {
               {offerta.energia.indice && (
                 <InfoRow label="Indice" value={offerta.energia.indice} />
               )}
-              {offerta.energia.ccvMonthlyEur !== undefined && (
-                <InfoRow label="CCV Mensile" value={`${offerta.energia.ccvMonthlyEur} €`} />
-              )}
             </CardContent>
           </Card>
         )}

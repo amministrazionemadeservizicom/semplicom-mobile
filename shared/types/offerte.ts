@@ -104,9 +104,9 @@ export interface OffertaFotovoltaicoDto {
 }
 
 /**
- * Gestore
+ * Gestore semplificato per offerta (evita conflitto con Gestore in gestori.ts)
  */
-export interface Gestore {
+export interface OffertaGestore {
   id?: number;
   nome?: string;
   logoUrl?: string;
@@ -123,7 +123,7 @@ export interface OffertaCompleta {
   fotovoltaico?: OffertaFotovoltaicoDto | null;
   allegati?: AllegatoDto[];
   nomeOfferta?: string;
-  gestore?: Gestore;
+  gestore?: OffertaGestore;
   tipoOfferta?: "fisso" | "indicizzato";
   categoria?: "Luce" | "Gas" | "Telco" | "Fotovoltaico";
   note?: string;

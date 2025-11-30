@@ -3,6 +3,10 @@
  * Condivisi tra web e mobile
  */
 
+// Import and re-export UserSimpleDto from user to avoid duplicate definition
+import type { UserSimpleDto } from './user';
+export type { UserSimpleDto };
+
 // ===== ENUMS =====
 export type StatoContratto =
   | "inserito"
@@ -108,16 +112,6 @@ export interface Contratto {
 
   createdAt?: string;
   updatedAt?: string;
-}
-
-/**
- * DTO utente semplificato
- */
-export interface UserSimpleDto {
-  id: number;
-  nomeCognome: string;
-  email: string;
-  ruolo: string;
 }
 
 /**
