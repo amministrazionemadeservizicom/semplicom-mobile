@@ -15,10 +15,10 @@ import {
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuth, normalizeRole, getRoleDisplayName } from '../../lib/AuthContext';
+import { useAuth, normalizeRole, getRoleDisplayName, ROLES } from '../../lib/AuthContext';
 import { DrawerMenu } from './DrawerMenu';
 import { spacing } from '../../styles/spacing';
-import { fontSizes, fontWeights } from '../../styles/typography';
+import { fontWeights } from '../../styles/typography';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -43,7 +43,7 @@ const bottomNavItems: BottomNavItem[] = [
     icon: 'home-outline',
     iconActive: 'home',
     href: '/(tabs)/dashboard',
-    roles: ['consulente', 'c', 'backoffice', 'b'],
+    roles: ['consulente', 'backoffice'],
   },
   {
     id: 'admin-home',
@@ -51,7 +51,15 @@ const bottomNavItems: BottomNavItem[] = [
     icon: 'home-outline',
     iconActive: 'home',
     href: '/(tabs)/admin-dashboard',
-    roles: ['admin', 'a', 'master', 'm'],
+    roles: ['superadmin', 'admin'],
+  },
+  {
+    id: 'master-home',
+    label: 'Dashboard',
+    icon: 'home-outline',
+    iconActive: 'home',
+    href: '/(tabs)/master-dashboard',
+    roles: ['master'],
   },
   {
     id: 'offers',
@@ -59,7 +67,7 @@ const bottomNavItems: BottomNavItem[] = [
     icon: 'list-outline',
     iconActive: 'list',
     href: '/(tabs)/offers',
-    roles: ['backoffice', 'b'],
+    roles: ['backoffice'],
   },
   {
     id: 'offerte-catalog',
@@ -67,23 +75,23 @@ const bottomNavItems: BottomNavItem[] = [
     icon: 'list-outline',
     iconActive: 'list',
     href: '/(tabs)/offerte',
-    roles: ['master', 'm'],
+    roles: ['master'],
   },
   {
     id: 'contracts',
     label: 'Contratti',
     icon: 'document-text-outline',
     iconActive: 'document-text',
-    href: '/(tabs)/contracts',
-    roles: ['consulente', 'c', 'backoffice', 'b', 'admin', 'a', 'master', 'm'],
+    href: '/(tabs)/contratti',
+    roles: ['consulente', 'backoffice', 'superadmin', 'admin', 'master'],
   },
   {
     id: 'new-practice',
     label: 'Nuova',
     icon: 'add-circle-outline',
     iconActive: 'add-circle',
-    href: '/(tabs)/new-practice',
-    roles: ['consulente', 'c'],
+    href: '/(tabs)/nuova-pratica',
+    roles: ['consulente'],
   },
 ];
 
@@ -101,7 +109,7 @@ export function BottomNav({
   const router = useRouter();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
-  const { logout, user, userInfo } = useAuth();
+  const { logout, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const normalizedRole = normalizeRole(userRole);
@@ -110,7 +118,7 @@ export function BottomNav({
   // Filter nav items based on role
   const filteredNavItems = bottomNavItems.filter(
     (item) =>
-      item.roles.includes(userRole) || item.roles.includes(normalizedRole)
+      item.roles.includes(userRole) || (normalizedRole && item.roles.includes(normalizedRole))
   );
 
   // Limit to 4 items max (plus menu button)
@@ -136,7 +144,7 @@ export function BottomNav({
     if (onUserClick) {
       onUserClick();
     } else {
-      router.push('/(tabs)/profile' as any);
+      router.push('/(tabs)/profilo' as any);
     }
   };
 
@@ -200,15 +208,6 @@ export function BottomNav({
       <DrawerMenu
         visible={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
-        userRole={normalizedRole}
-        userFullName={userFullName}
-        userEmail={user?.email || userInfo?.email}
-        agencyName={userInfo?.nomeAgenzia}
-        onNavigate={(route) => {
-          setIsMenuOpen(false);
-          router.push(route as any);
-        }}
-        onLogout={handleLogout}
       />
     </>
   );

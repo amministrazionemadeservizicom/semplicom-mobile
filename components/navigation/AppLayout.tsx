@@ -8,7 +8,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -17,7 +16,6 @@ import { Header } from './Header';
 import { DrawerMenu } from './DrawerMenu';
 import { CtaContacts } from './CtaContacts';
 import { colors } from '../../styles/colors';
-import { spacing } from '../../styles/spacing';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -46,7 +44,7 @@ export function AppLayout({
 }: AppLayoutProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { userRole: authUserRole, user, logout, userInfo } = useAuth();
+  const { userRole: authUserRole, user, logout } = useAuth();
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [userFullName, setUserFullName] = useState<string>('');
@@ -55,33 +53,14 @@ export function AppLayout({
   const rawUserRole = userRole || authUserRole || 'consulente';
   const effectiveUserRole = normalizeRole(rawUserRole) || 'consulente';
 
-  // Update user full name from various sources
+  // Update user full name from user object
   useEffect(() => {
-    if (user?.name) {
-      setUserFullName(user.name);
-    }
-  }, [user?.name]);
-
-  useEffect(() => {
-    if (userInfo) {
-      const composed = [userInfo.nome, userInfo.cognome]
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-      if (composed) {
-        setUserFullName(composed);
-      }
-    }
-  }, [userInfo]);
-
-  // Fallback to stored name or default
-  useEffect(() => {
-    if (!userFullName && !userInfo) {
-      // In React Native, we'd use AsyncStorage instead of localStorage
-      // For now, use a default
+    if (user?.nomeCognome) {
+      setUserFullName(user.nomeCognome);
+    } else {
       setUserFullName('Utente');
     }
-  }, [userFullName, userInfo]);
+  }, [user?.nomeCognome]);
 
   const handleMenuPress = () => {
     setDrawerVisible(true);
@@ -93,7 +72,7 @@ export function AppLayout({
 
   const handleUserClick = () => {
     setDrawerVisible(false);
-    router.push('/(tabs)/profile' as any);
+    router.push('/(tabs)/profilo' as any);
   };
 
   const handleLogout = async () => {
@@ -115,8 +94,6 @@ export function AppLayout({
     }
   };
 
-  const roleDisplayName = getRoleDisplayName(effectiveUserRole);
-
   // If navigation is disabled, just render children
   if (!showNavigation) {
     return <View style={styles.container}>{children}</View>;
@@ -131,8 +108,6 @@ export function AppLayout({
         showNotifications={true}
         showProfile={true}
         onMenuPress={handleMenuPress}
-        onBackPress={handleBack}
-        onProfilePress={handleUserClick}
       />
 
       {/* Main Content */}
@@ -150,15 +125,6 @@ export function AppLayout({
       <DrawerMenu
         visible={drawerVisible}
         onClose={handleCloseDrawer}
-        userRole={effectiveUserRole}
-        userFullName={userFullName}
-        userEmail={user?.email || userInfo?.email}
-        agencyName={userInfo?.nomeAgenzia}
-        onNavigate={(route) => {
-          setDrawerVisible(false);
-          router.push(route as any);
-        }}
-        onLogout={handleLogout}
       />
     </View>
   );

@@ -289,3 +289,25 @@ export function useAuth(): AuthContextType {
 
 // Re-export for convenience
 export { ROLES, type UserRole };
+
+// Re-export utility functions
+export { normalizeRole, getDashboardPathByRole, hasRole, can } from '../shared/utils/roles';
+
+// Helper function to get role display name
+export function getRoleDisplayName(role: UserRole | string | null): string {
+  if (!role) return 'Utente';
+  switch (role) {
+    case ROLES.SUPERADMIN:
+      return 'Super Admin';
+    case ROLES.ADMIN:
+      return 'Amministratore';
+    case ROLES.MASTER:
+      return 'Master';
+    case ROLES.CONSULENTE:
+      return 'Consulente';
+    case ROLES.BACK_OFFICE:
+      return 'Back Office';
+    default:
+      return 'Utente';
+  }
+}
