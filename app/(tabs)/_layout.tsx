@@ -261,6 +261,38 @@ export default function TabsLayout() {
           href: '/(tabs)/profilo',
         }}
       />
+
+      {/* Schermate nascoste dalla tab bar - accessibili via drawer o navigazione */}
+
+      {/* Caricamento Fast - procedura rapida */}
+      <Tabs.Screen
+        name="caricamento-fast"
+        options={{
+          title: 'Caricamento Fast',
+          href: null, // Nascosto dalla tab bar
+          headerShown: false, // Header custom nella pagina
+        }}
+      />
+
+      {/* Piani Compenso - solo admin */}
+      <Tabs.Screen
+        name="piani-compenso"
+        options={{
+          title: 'Piani Compenso',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Compile Contract Multi - wizard contratti multipli */}
+      <Tabs.Screen
+        name="compile-contract-multi"
+        options={{
+          title: 'Nuovi Contratti',
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
     </>
   );
