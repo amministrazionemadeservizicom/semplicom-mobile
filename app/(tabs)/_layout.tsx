@@ -80,8 +80,7 @@ export default function TabsLayout() {
   const canCompileContract = !showBackoffice;
 
   return (
-    <>
-    <DrawerMenu visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
+    <View style={{ flex: 1 }}>
     <Tabs
       screenOptions={{
         // Nascondi la tab bar - usiamo solo il drawer menu
@@ -369,8 +368,99 @@ export default function TabsLayout() {
           headerShown: false,
         }}
       />
+
+      {/* Admin Contratti - Admin/SA */}
+      <Tabs.Screen
+        name="admin-contratti"
+        options={{
+          title: 'Gestione Contratti',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Admin Offers - Admin/SA/Master */}
+      <Tabs.Screen
+        name="admin-offers"
+        options={{
+          title: 'Gestione Offerte',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Admin Attendance - Presenze */}
+      <Tabs.Screen
+        name="admin-attendance"
+        options={{
+          title: 'Presenze',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Users - Gestione Utenti Admin */}
+      <Tabs.Screen
+        name="users"
+        options={{
+          title: 'Utenti',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Consulenti - per Master */}
+      <Tabs.Screen
+        name="consulenti"
+        options={{
+          title: 'I Miei Consulenti',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Master Dashboard */}
+      <Tabs.Screen
+        name="master-dashboard"
+        options={{
+          title: 'Dashboard',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Gestori - SA */}
+      <Tabs.Screen
+        name="gestori"
+        options={{
+          title: 'Gestori',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Impostazioni - SA */}
+      <Tabs.Screen
+        name="impostazioni"
+        options={{
+          title: 'Impostazioni',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Backoffice Workflow */}
+      <Tabs.Screen
+        name="backoffice-workflow"
+        options={{
+          title: 'Workflow',
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
-    </>
+    <DrawerMenu visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
+    </View>
   );
 }
 

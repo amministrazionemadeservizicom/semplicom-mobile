@@ -18,7 +18,6 @@ import {
   TouchableOpacity,
   Platform,
   ScrollView,
-  Modal,
   Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -324,12 +323,18 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
   };
 
   const handleItemPress = (item: MenuItem) => {
-    if (item.action) {
-      item.action();
-    } else if (item.route) {
-      router.push(item.route as any);
-      onClose();
-    }
+    // Prima chiudi il drawer
+    onClose();
+
+    // Poi naviga (con un piccolo delay per permettere l'animazione)
+    setTimeout(() => {
+      if (item.action) {
+        item.action();
+      } else if (item.route) {
+        console.log('🧭 Navigating to:', item.route);
+        router.push(item.route as any);
+      }
+    }, 100);
   };
 
   const handleLogout = async () => {
@@ -393,11 +398,13 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
   const { main, admin, system, profile } = groupedItems();
 
   const renderMenuItem = (item: MenuItem) => (
-    <TouchableOpacity
+    <Pressable
       key={item.id}
-      style={styles.menuItem}
+      style={({ pressed }) => [
+        styles.menuItem,
+        pressed && styles.menuItemPressed,
+      ]}
       onPress={() => handleItemPress(item)}
-      activeOpacity={0.7}
       accessibilityLabel={item.label}
     >
       <Ionicons
@@ -411,24 +418,24 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
         size={18}
         color={SEMPLISWITCH_COLORS.gray[400]}
       />
-    </TouchableOpacity>
+    </Pressable>
   );
 
+  // Se non visibile, non renderizzare nulla
+  if (!visible) return null;
+
   return (
-    <Modal
-      visible={visible}
-      animationType="fade"
-      transparent
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        {/* Drawer Content - posizionato a sinistra */}
-        <View
-          style={[
-            styles.drawer,
-            { paddingTop: insets.top },
-          ]}
-        >
+    <View style={styles.overlay}>
+      {/* Backdrop - cliccabile per chiudere */}
+      <Pressable style={styles.backdrop} onPress={onClose} />
+
+      {/* Drawer Content - posizionato a sinistra */}
+      <View
+        style={[
+          styles.drawer,
+          { paddingTop: insets.top },
+        ]}
+      >
           {/* Header con profilo utente */}
           <View style={styles.drawerHeader}>
             <View style={styles.userSection}>
@@ -529,23 +536,29 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
             <Text style={styles.footerVersion}>v1.0.0</Text>
           </View>
         </View>
-
-        {/* Backdrop - a destra del drawer */}
-        <Pressable style={styles.backdrop} onPress={onClose} />
       </View>
-    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
     flexDirection: 'row',
   },
   backdrop: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
+    cursor: 'pointer',
+  } as any,
   drawer: {
     position: 'absolute',
     left: 0,
@@ -554,6 +567,7 @@ const styles = StyleSheet.create({
     width: '80%',
     maxWidth: 320,
     backgroundColor: SEMPLISWITCH_COLORS.white,
+    zIndex: 1001,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -563,6 +577,9 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 16,
+      },
+      web: {
+        boxShadow: '2px 0 8px rgba(0,0,0,0.2)',
       },
     }),
   },
@@ -652,6 +669,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     borderRadius: borderRadius.md,
     marginVertical: spacing[0.5],
+    cursor: 'pointer',
+  } as any,
+  menuItemPressed: {
+    backgroundColor: SEMPLISWITCH_COLORS.gray[100],
   },
   menuItemText: {
     fontSize: fontSizes.base,

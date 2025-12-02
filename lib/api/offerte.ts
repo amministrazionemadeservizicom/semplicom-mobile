@@ -4,6 +4,7 @@
  */
 
 import { authed } from './client';
+import { API_BASE_URL } from '../config';
 
 // ============================================
 // TYPES
@@ -256,6 +257,13 @@ export const OfferteAPI = {
   deleteAllegato: async (id: number): Promise<void> => {
     console.log("🗑️ OfferteAPI.deleteAllegato:", id);
     await authed.delete(`/api/protected/elimina-allegato/${id}`);
+  },
+
+  /**
+   * Ottiene URL logo gestore
+   */
+  getLogoGestoreUrl: (idGestore: number): string => {
+    return `${API_BASE_URL}/api/protected/logo-gestore/${idGestore}`;
   },
 };
 
