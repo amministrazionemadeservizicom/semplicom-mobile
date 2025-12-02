@@ -293,6 +293,106 @@ export default function TabsLayout() {
           headerShown: false,
         }}
       />
+
+      {/* Comunicazioni - accessibile dal drawer */}
+      <Tabs.Screen
+        name="comunicazioni"
+        options={{
+          title: 'Comunicazioni',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Contract Detail - dettaglio singolo contratto */}
+      <Tabs.Screen
+        name="contract-detail"
+        options={{
+          title: 'Dettaglio Contratto',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Messaggi - notifiche contratti */}
+      <Tabs.Screen
+        name="messaggi"
+        options={{
+          title: 'Messaggi',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Il Mio Piano Compenso */}
+      <Tabs.Screen
+        name="my-piano-compenso"
+        options={{
+          title: 'Il Mio Piano',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Simulatore Luce/Gas */}
+      <Tabs.Screen
+        name="simulation"
+        options={{
+          title: 'Simulatore',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Drive documenti */}
+      <Tabs.Screen
+        name="drive"
+        options={{
+          title: 'Drive',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Ricerca Prodotto */}
+      <Tabs.Screen
+        name="product-finder"
+        options={{
+          title: 'Ricerca Prodotto',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Stato Pagamenti */}
+      <Tabs.Screen
+        name="stato-pagamenti"
+        options={{
+          title: 'Stato Pagamenti',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Global Users - SA */}
+      <Tabs.Screen
+        name="global-users"
+        options={{
+          title: 'Gestione Utenti',
+          href: null,
+          headerShown: false,
+        }}
+      />
+
+      {/* Gestione Agenzie - SA */}
+      <Tabs.Screen
+        name="gestione-agenzie"
+        options={{
+          title: 'Gestione Agenzie',
+          href: null,
+          headerShown: false,
+        }}
+      />
     </Tabs>
     </>
   );

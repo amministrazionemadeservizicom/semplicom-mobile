@@ -112,6 +112,42 @@ const ALL_MENU_ITEMS: MenuItem[] = [
     roles: [ROLES.BACK_OFFICE],
     section: 'main',
   },
+  // Messaggi - tutti tranne backoffice
+  {
+    id: 'messaggi',
+    label: 'Messaggi',
+    icon: 'chatbubbles-outline',
+    route: '/(tabs)/messaggi',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE],
+    section: 'main',
+  },
+  // Simulatore - tutti tranne backoffice
+  {
+    id: 'simulation',
+    label: 'Simulatore',
+    icon: 'calculator-outline',
+    route: '/(tabs)/simulation',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE],
+    section: 'main',
+  },
+  // Ricerca Prodotto - tutti tranne backoffice
+  {
+    id: 'product-finder',
+    label: 'Ricerca Prodotto',
+    icon: 'search-outline',
+    route: '/(tabs)/product-finder',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE],
+    section: 'main',
+  },
+  // Drive documenti - tutti
+  {
+    id: 'drive',
+    label: 'Drive',
+    icon: 'folder-outline',
+    route: '/(tabs)/drive',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE, ROLES.BACK_OFFICE],
+    section: 'main',
+  },
 
   // === SEZIONE AMMINISTRAZIONE ===
   // Gestione Contratti Admin
@@ -159,13 +195,57 @@ const ALL_MENU_ITEMS: MenuItem[] = [
     roles: [ROLES.MASTER],
     section: 'admin',
   },
+  // Il Mio Piano Compenso - consulenti e master
+  {
+    id: 'my-piano-compenso',
+    label: 'Il Mio Piano Compenso',
+    icon: 'wallet-outline',
+    route: '/(tabs)/my-piano-compenso',
+    roles: [ROLES.MASTER, ROLES.CONSULENTE],
+    section: 'admin',
+  },
+  // Stato Pagamenti - admin e SA
+  {
+    id: 'stato-pagamenti',
+    label: 'Stato Pagamenti',
+    icon: 'cash-outline',
+    route: '/(tabs)/stato-pagamenti',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN],
+    section: 'admin',
+  },
+  // Piani Compenso - solo admin e SA
+  {
+    id: 'piani-compenso',
+    label: 'Piani Compenso',
+    icon: 'clipboard-outline',
+    route: '/(tabs)/piani-compenso',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN],
+    section: 'admin',
+  },
+  // Comunicazioni - tutti tranne backoffice
+  {
+    id: 'comunicazioni',
+    label: 'Comunicazioni',
+    icon: 'megaphone-outline',
+    route: '/(tabs)/comunicazioni',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE],
+    section: 'admin',
+  },
 
   // === SEZIONE SISTEMA (Solo SuperAdmin) ===
   {
-    id: 'agenzie',
-    label: 'Agenzie',
+    id: 'global-users',
+    label: 'Gestione Utenti',
+    icon: 'people-outline',
+    route: '/(tabs)/global-users',
+    roles: [ROLES.SUPERADMIN],
+    section: 'system',
+  },
+  {
+    id: 'gestione-agenzie',
+    label: 'Gestione Agenzie',
     icon: 'business-outline',
-    route: '/(tabs)/agenzie',
+    route: '/(tabs)/gestione-agenzie',
     roles: [ROLES.SUPERADMIN],
     section: 'system',
   },

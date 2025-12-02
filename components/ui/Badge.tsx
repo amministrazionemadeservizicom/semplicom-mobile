@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, TextStyle, StyleProp } from 'react-native';
 import { colors } from '../../styles/colors';
 import { borderRadius, spacing } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
@@ -25,8 +25,8 @@ export type BadgeVariant =
 export interface BadgeProps {
   variant?: BadgeVariant;
   children: React.ReactNode;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 // ============ COMPONENT ============
