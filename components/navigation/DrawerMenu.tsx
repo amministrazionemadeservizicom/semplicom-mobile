@@ -417,15 +417,12 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        {/* Backdrop */}
-        <Pressable style={styles.backdrop} onPress={onClose} />
-
-        {/* Drawer Content */}
+        {/* Drawer Content - posizionato a sinistra */}
         <View
           style={[
             styles.drawer,
@@ -532,6 +529,9 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
             <Text style={styles.footerVersion}>v1.0.0</Text>
           </View>
         </View>
+
+        {/* Backdrop - a destra del drawer */}
+        <Pressable style={styles.backdrop} onPress={onClose} />
       </View>
     </Modal>
   );
@@ -547,13 +547,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   drawer: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
     width: '80%',
     maxWidth: 320,
     backgroundColor: SEMPLISWITCH_COLORS.white,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: -2, height: 0 },
+        shadowOffset: { width: 2, height: 0 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
       },

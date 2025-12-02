@@ -23,6 +23,7 @@ import { Card, CardContent } from '../../components/ui/Card';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
+import { UsersAPI, UserDto, mapStatoToString, mapRuoloToLabel } from '../../lib/api';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -43,15 +44,17 @@ interface User {
   dataCreazione: string;
 }
 
-// Mock data
-const MOCK_USERS: User[] = [
-  { id: 1, username: 'mario.rossi', nomeCognome: 'Mario Rossi', email: 'mario@agenzia1.it', ruolo: 'a', agenzia: 'Agenzia Milano', stato: 'ATTIVO', dataCreazione: '2024-01-15' },
-  { id: 2, username: 'lucia.bianchi', nomeCognome: 'Lucia Bianchi', email: 'lucia@agenzia1.it', ruolo: 'm', agenzia: 'Agenzia Milano', stato: 'ATTIVO', dataCreazione: '2024-02-20' },
-  { id: 3, username: 'giuseppe.verdi', nomeCognome: 'Giuseppe Verdi', email: 'giuseppe@agenzia2.it', ruolo: 'c', agenzia: 'Agenzia Roma', stato: 'ATTIVO', dataCreazione: '2024-03-10' },
-  { id: 4, username: 'anna.neri', nomeCognome: 'Anna Neri', email: 'anna@agenzia2.it', ruolo: 'b', agenzia: 'Agenzia Roma', stato: 'SOSPESO', dataCreazione: '2024-01-05' },
-  { id: 5, username: 'paolo.gialli', nomeCognome: 'Paolo Gialli', email: 'paolo@agenzia3.it', ruolo: 'c', agenzia: 'Agenzia Napoli', stato: 'ATTIVO', dataCreazione: '2024-04-01' },
-  { id: 6, username: 'sara.viola', nomeCognome: 'Sara Viola', email: 'sara@agenzia1.it', ruolo: 'c', agenzia: 'Agenzia Milano', stato: 'DISABILITATO', dataCreazione: '2023-11-20' },
-];
+// Map UserDto to local User interface
+const mapUserDto = (dto: UserDto): User => ({
+  id: dto.id,
+  username: dto.username,
+  nomeCognome: dto.nomeCognome,
+  email: dto.email,
+  ruolo: dto.ruolo as 's' | 'a' | 'm' | 'b' | 'c',
+  agenzia: `Agenzia ${dto.idAgenzia}`,
+  stato: mapStatoToString(dto.stato),
+  dataCreazione: dto.dataCreazione || new Date().toISOString(),
+});
 
 // Configurazione ruoli
 const ROLE_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
@@ -173,22 +176,44 @@ export default function GlobalUsers() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [users, setUsers] = useState<User[]>(MOCK_USERS);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Load users from API
+  const loadUsers = useCallback(async () => {
+    try {
+      const params: { ruolo?: string; stato?: number } = {};
+      if (roleFilter !== 'all') params.ruolo = roleFilter;
+      if (statusFilter !== 'all') {
+        params.stato = statusFilter === 'ATTIVO' ? 1 : statusFilter === 'SOSPESO' ? 0 : -1;
+      }
+
+      const data = await UsersAPI.list(params);
+      setUsers(data.map(mapUserDto));
+    } catch (error) {
+      console.error('Error loading users:', error);
+      Alert.alert('Errore', 'Impossibile caricare gli utenti');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [roleFilter, statusFilter]);
+
+  // Initial load
+  React.useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
   // Refresh
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    // Simula caricamento
-    setTimeout(() => {
-      setUsers(MOCK_USERS);
-      setRefreshing(false);
-    }, 1000);
-  }, []);
+    loadUsers();
+  }, [loadUsers]);
 
   // Filtra utenti
   const filteredUsers = useMemo(() => {
@@ -219,14 +244,15 @@ export default function GlobalUsers() {
         { text: 'Annulla', style: 'cancel' },
         {
           text: 'Conferma',
-          onPress: () => {
-            setUsers(prev => prev.map(u => {
-              if (u.id === userId) {
-                const newStato = u.stato === 'ATTIVO' ? 'SOSPESO' : 'ATTIVO';
-                return { ...u, stato: newStato };
-              }
-              return u;
-            }));
+          onPress: async () => {
+            try {
+              await UsersAPI.toggleStatus(userId);
+              // Reload users after toggle
+              loadUsers();
+            } catch (error) {
+              console.error('Error toggling user status:', error);
+              Alert.alert('Errore', 'Impossibile modificare lo stato dell\'utente');
+            }
           }
         }
       ]

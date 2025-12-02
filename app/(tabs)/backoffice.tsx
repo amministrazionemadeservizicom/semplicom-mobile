@@ -29,6 +29,7 @@ import { AccessDenied } from '../../components/navigation/AccessDenied';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
+import { ContrattiAPI, ContrattoDto } from '../../lib/api';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -139,75 +140,59 @@ export default function BackOfficeDashboard() {
   // Access guard - only backoffice
   const isBackOffice = userRole === ROLES.BACK_OFFICE;
 
+  // Map ContrattoDto to local Contract interface
+  const mapContrattoToContract = (c: ContrattoDto): Contract => {
+    // Map stato to backoffice status
+    const mapStato = (stato: string): string => {
+      switch (stato) {
+        case 'inserito': return 'Caricato';
+        case 'in_verifica': return 'In Lavorazione';
+        case 'lavorazione': return 'In Lavorazione';
+        case 'ok_inserimento': return 'Documenti OK';
+        case 'sospeso': return 'Documenti KO';
+        default: return stato;
+      }
+    };
+
+    return {
+      id: String(c.id),
+      statoOfferta: mapStato(c.stato),
+      contatto: {
+        nome: c.nome,
+        cognome: c.cognome,
+        codiceFiscale: c.codiceFiscale,
+      },
+      creatoDa: c.agente ? {
+        nome: c.agente.nomeCognome?.split(' ')[0] || '',
+        cognome: c.agente.nomeCognome?.split(' ')[1] || '',
+        ruolo: c.agente.ruolo || 'consulente',
+      } : undefined,
+      gestore: c.offerta?.nomeGestore || '',
+      tipologiaContratto: c.commodity || 'energia',
+      dataCreazione: c.tsCreazione || c.tsInserimento || new Date().toISOString(),
+      noteStatoOfferta: c.note,
+    };
+  };
+
   // Load contracts
   const loadContracts = useCallback(async () => {
     if (!isBackOffice) return;
 
     try {
       setError(null);
-      // TODO: Replace with actual API call
-      // const data = await adminApi.getContractsFiltered({
-      //   status: filters.status,
-      //   gestore: filters.gestore,
-      //   tipologia: filters.tipologia,
-      //   onlyMine: filters.onlyMine,
-      //   dateFrom: filters.dateFrom,
-      //   dateTo: filters.dateTo,
-      //   search: filters.search,
-      //   agente: filters.agente,
-      //   userId: user?.id,
-      // });
+      // Fetch real data from API
+      const response = await ContrattiAPI.list({
+        size: 100,
+        stato: filters.status === 'Caricato' ? 'inserito' :
+               filters.status === 'In Lavorazione' ? 'lavorazione' :
+               filters.status === 'Documenti KO' ? 'sospeso' :
+               filters.status === 'Documenti OK' ? 'ok_inserimento' : undefined,
+        searchTerm: filters.search,
+      });
 
-      // Mock data
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const mockContracts: Contract[] = [
-        {
-          id: '1',
-          statoOfferta: 'Caricato',
-          contatto: { nome: 'Mario', cognome: 'Rossi', codiceFiscale: 'RSSMRA80A01H501Z' },
-          creatoDa: { nome: 'Giuseppe', cognome: 'Verdi', ruolo: 'consulente' },
-          gestore: 'A2A',
-          tipologiaContratto: 'energia',
-          dataCreazione: new Date().toISOString().split('T')[0],
-          noteStatoOfferta: 'Attesa documenti',
-        },
-        {
-          id: '2',
-          statoOfferta: 'In Lavorazione',
-          contatto: { nome: 'Laura', cognome: 'Bianchi', codiceFiscale: 'BNCLRA85B41F205X' },
-          creatoDa: { nome: 'Anna', cognome: 'Neri', ruolo: 'consulente' },
-          gestore: 'EDISON',
-          tipologiaContratto: 'telefonia',
-          dataCreazione: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-          lock: {
-            lockedBy: { id: user?.id?.toString() || '1', nome: user?.nomeCognome?.split(' ')[0] || 'Operatore', cognome: user?.nomeCognome?.split(' ')[1] || '', ruolo: 'backoffice' },
-            dataLock: new Date().toISOString(),
-            inScadenza: false,
-          },
-        },
-        {
-          id: '3',
-          statoOfferta: 'Documenti KO',
-          contatto: { nome: 'Paolo', cognome: 'Verdi', codiceFiscale: 'VRDPLA90C15L219K' },
-          creatoDa: { nome: 'Marco', cognome: 'Russo', ruolo: 'master' },
-          gestore: 'A2A',
-          tipologiaContratto: 'energia',
-          dataCreazione: new Date(Date.now() - 172800000).toISOString().split('T')[0],
-          noteStatoOfferta: 'Manca bolletta',
-        },
-        {
-          id: '4',
-          statoOfferta: 'Documenti OK',
-          contatto: { nome: 'Giulia', cognome: 'Ferrari', codiceFiscale: 'FRRGLI88D55A944P' },
-          creatoDa: { nome: 'Luca', cognome: 'Baldi', ruolo: 'consulente' },
-          gestore: 'EDISON',
-          tipologiaContratto: 'energia',
-          dataCreazione: new Date(Date.now() - 259200000).toISOString().split('T')[0],
-          cronologiaStati: [{ stato: 'Documenti OK', dataModifica: new Date().toISOString() }],
-        },
-      ];
-
-      setContracts(mockContracts);
+      // Map API response to local Contract interface
+      const mappedContracts = response.content.map(mapContrattoToContract);
+      setContracts(mappedContracts);
     } catch (err) {
       console.error('Error loading contracts:', err);
       setError(err instanceof Error ? err.message : 'Errore caricamento contratti');

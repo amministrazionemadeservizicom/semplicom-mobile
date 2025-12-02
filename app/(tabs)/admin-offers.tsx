@@ -27,6 +27,7 @@ import { AccessDenied } from '../../components/navigation/AccessDenied';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
+import { OfferteAPI, OffertaCompleta } from '../../lib/api';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -167,59 +168,45 @@ export default function AdminOffers() {
 
   const isAdmin = userRole === ROLES.ADMIN || userRole === ROLES.SUPERADMIN || userRole === ROLES.MASTER;
 
+  // Map API response to local Offerta interface
+  const mapOffertaApi = (o: OffertaCompleta): Offerta => ({
+    id: o.base?.id || 0,
+    nome: o.base?.nome || '',
+    categoria: (o.base?.categoria || 'energia') as CategoriaOfferta,
+    stato: (o.base?.stato || 'attiva') as StatoOfferta,
+    customer: (o.base?.customer || 'privato') as TipoCliente,
+    gestore: o.base?.idGestore ? { id: o.base.idGestore, nome: o.base.nomeGestore || '' } : undefined,
+    base: o.base,
+    energia: o.energia,
+  });
+
   // Load data
   const loadOfferte = useCallback(async () => {
     try {
-      // TODO: Replace with actual API call
-      // const params = { page, size: PAGE_SIZE, categoria: filterCategoria !== 'all' ? filterCategoria : undefined, ... };
-      // const response = await offerteApi.listOfferte(params);
+      // Fetch real data from API
+      const response = await OfferteAPI.list({
+        page,
+        size: PAGE_SIZE,
+        categoria: filterCategoria !== 'all' ? filterCategoria as any : undefined,
+        stato: filterStato !== 'all' ? filterStato as any : undefined,
+        customer: filterCliente !== 'all' ? filterCliente as any : undefined,
+      });
 
-      // Mock data
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setOfferte([
-        {
-          id: 1,
-          nome: 'Enel Luce Casa',
-          categoria: 'energia',
-          stato: 'attiva',
-          customer: 'privato',
-          gestore: { id: 1, nome: 'Enel Energia' },
-          energia: { commodity: 'luce', acquisition: 'switch', prezzoTipo: true },
-        },
-        {
-          id: 2,
-          nome: 'Eni Gas Business',
-          categoria: 'energia',
-          stato: 'attiva',
-          customer: 'business',
-          gestore: { id: 2, nome: 'Eni' },
-          energia: { commodity: 'gas', acquisition: 'subentro', prezzoTipo: false },
-        },
-        {
-          id: 3,
-          nome: 'TIM Fibra',
-          categoria: 'telco',
-          stato: 'bozza',
-          customer: 'privato',
-          gestore: { id: 3, nome: 'TIM' },
-        },
-        {
-          id: 4,
-          nome: 'Impianto Fotovoltaico 6kW',
-          categoria: 'fotovoltaico',
-          stato: 'attiva',
-          customer: 'privato',
-          gestore: { id: 4, nome: 'SunPower' },
-        },
-      ]);
-      setGestori([
-        { id: 1, nome: 'Enel Energia' },
-        { id: 2, nome: 'Eni' },
-        { id: 3, nome: 'TIM' },
-        { id: 4, nome: 'SunPower' },
-      ]);
-      setTotalPages(1);
-      setTotalElements(4);
+      // Map API response to local interface
+      const mapped = response.content.map(mapOffertaApi);
+      setOfferte(mapped);
+
+      // Extract unique gestori
+      const uniqueGestori = new Map<number, { id: number; nome: string }>();
+      mapped.forEach(o => {
+        if (o.gestore) {
+          uniqueGestori.set(o.gestore.id, o.gestore);
+        }
+      });
+      setGestori(Array.from(uniqueGestori.values()));
+
+      setTotalPages(response.totalPages);
+      setTotalElements(response.totalElements);
     } catch (error) {
       console.error('Error loading offerte:', error);
       Alert.alert('Errore', 'Impossibile caricare le offerte');

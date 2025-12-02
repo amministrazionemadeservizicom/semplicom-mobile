@@ -84,32 +84,8 @@ export default function TabsLayout() {
     <DrawerMenu visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     <Tabs
       screenOptions={{
-        // Tab Bar colors - sfondo giallo sempliswitch
-        tabBarActiveTintColor: SEMPLISWITCH_COLORS.magenta,
-        tabBarInactiveTintColor: SEMPLISWITCH_COLORS.gray[700],
-        tabBarStyle: {
-          backgroundColor: SEMPLISWITCH_COLORS.yellow,
-          borderTopWidth: 0,
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : spacing[2],
-          paddingTop: spacing[2],
-          ...Platform.select({
-            ios: {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-            },
-            android: {
-              elevation: 8,
-            },
-          }),
-        },
-        tabBarLabelStyle: {
-          fontSize: fontSizes.xs,
-          fontWeight: fontWeights.semibold as any,
-          marginTop: 2,
-        },
+        // Nascondi la tab bar - usiamo solo il drawer menu
+        tabBarStyle: { display: 'none' },
         // Header colors - sfondo giallo
         headerStyle: {
           backgroundColor: SEMPLISWITCH_COLORS.yellow,

@@ -22,6 +22,7 @@ import { Badge } from '../../components/ui/Badge';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
+import { PianiCompensoAPI, MyPianoCompenso as MyPianoCompensoType, LineItem } from '../../lib/api';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -31,44 +32,7 @@ const SEMPLISWITCH_COLORS = {
   blue: '#3B82F6',
 };
 
-// Tipi
-interface LineItem {
-  gestore: string;
-  tipoContratto: string;
-  tipoCliente: string;
-  compensoLordo: number;
-  note?: string;
-}
-
-interface PianoCompenso {
-  id: string;
-  nome: string;
-  descrizione?: string;
-  dataInizio?: string;
-  dataFine?: string;
-  stato: 'attivo' | 'scaduto' | 'futuro';
-  lineItems: LineItem[];
-}
-
-// Mock data
-const MOCK_PIANO: PianoCompenso = {
-  id: '1',
-  nome: 'Piano Standard Consulente 2024',
-  descrizione: 'Piano compensi per consulenti con provvigioni standard su tutte le utenze',
-  dataInizio: '2024-01-01',
-  dataFine: '2024-12-31',
-  stato: 'attivo',
-  lineItems: [
-    { gestore: 'Enel', tipoContratto: 'Switch', tipoCliente: 'Domestico', compensoLordo: 35.00 },
-    { gestore: 'Enel', tipoContratto: 'Switch', tipoCliente: 'Business', compensoLordo: 50.00 },
-    { gestore: 'Enel', tipoContratto: 'Voltura', tipoCliente: 'Domestico', compensoLordo: 40.00 },
-    { gestore: 'Eni', tipoContratto: 'Switch', tipoCliente: 'Domestico', compensoLordo: 32.00 },
-    { gestore: 'Eni', tipoContratto: 'Switch', tipoCliente: 'Business', compensoLordo: 45.00 },
-    { gestore: 'A2A', tipoContratto: 'Switch', tipoCliente: 'Domestico', compensoLordo: 30.00 },
-    { gestore: 'A2A', tipoContratto: 'Subentro', tipoCliente: 'Domestico', compensoLordo: 35.00 },
-    { gestore: 'Illumia', tipoContratto: 'Switch', tipoCliente: 'Business', compensoLordo: 55.00 },
-  ],
-};
+// Use types from API
 
 // Componente per riga compenso
 function CompensoRow({ item }: { item: LineItem }) {
@@ -149,7 +113,7 @@ export default function MyPianoCompenso() {
   const insets = useSafeAreaInsets();
   const { userRole, isSuperAdmin } = useAuth();
 
-  const [piano, setPiano] = useState<PianoCompenso | null>(null);
+  const [piano, setPiano] = useState<MyPianoCompensoType | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -163,13 +127,9 @@ export default function MyPianoCompenso() {
   // Load piano compenso
   const loadPiano = useCallback(async () => {
     try {
-      // In produzione: chiamata API
-      // const response = await authed.get('/protected/my-piano-compenso');
-      // setPiano(response);
-
-      // Mock data
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setPiano(MOCK_PIANO);
+      // Fetch real data from API
+      const response = await PianiCompensoAPI.getMyPiano();
+      setPiano(response);
     } catch (error) {
       console.error('Error loading piano compenso:', error);
       setPiano(null);

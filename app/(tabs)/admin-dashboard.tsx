@@ -25,6 +25,7 @@ import { AccessDenied } from '../../components/navigation/AccessDenied';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
+import { DashboardAPI, ContrattiAPI } from '../../lib/api';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -92,21 +93,53 @@ export default function AdminDashboard() {
   const loadMetrics = useCallback(async () => {
     setError(null);
     try {
-      // TODO: Replace with actual API call
-      // const response = await authed.get(`/protected/admin-metrics?year=${selected.year}&month=${selected.month}`);
-      // setOggi(response.oggi ?? 0);
-      // setIeri(response.ieri ?? 0);
-      // setChiusi(response.chiusi ?? 0);
-      // setDaLavorare(response.daLavorare ?? 0);
-      // setConsulentiAttivi(response.consulentiAttivi ?? 0);
+      // Fetch real data from API
+      const contrattiResponse = await ContrattiAPI.list({ size: 200 });
+      const contratti = contrattiResponse.content;
 
-      // Mock data for now
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setOggi(5);
-      setIeri(3);
-      setChiusi(42);
-      setDaLavorare(12);
-      setConsulentiAttivi(8);
+      // Date calculations
+      const oggi = new Date();
+      oggi.setHours(0, 0, 0, 0);
+
+      const ieri = new Date(oggi);
+      ieri.setDate(ieri.getDate() - 1);
+
+      // Filter by selected month/year
+      const contrattiMese = contratti.filter(c => {
+        const data = new Date(c.tsCreazione || c.tsInserimento || '');
+        return data.getMonth() === selected.month && data.getFullYear() === selected.year;
+      });
+
+      // Contratti di oggi
+      const contrattiOggi = contratti.filter(c => {
+        const data = new Date(c.tsCreazione || c.tsInserimento || '');
+        data.setHours(0, 0, 0, 0);
+        return data.getTime() === oggi.getTime();
+      });
+
+      // Contratti di ieri
+      const contrattiIeri = contratti.filter(c => {
+        const data = new Date(c.tsCreazione || c.tsInserimento || '');
+        data.setHours(0, 0, 0, 0);
+        return data.getTime() === ieri.getTime();
+      });
+
+      // Contratti chiusi (attivati) nel mese selezionato
+      const contrattiChiusi = contrattiMese.filter(c => c.stato === 'attivato' || c.stato === 'ok_inserimento');
+
+      // Contratti da lavorare
+      const contrattiDaLavorare = contratti.filter(c =>
+        c.stato === 'inserito' || c.stato === 'in_verifica' || c.stato === 'lavorazione'
+      );
+
+      // Get unique agents count (from contratti)
+      const agentiIds = new Set(contratti.map(c => c.agente?.id).filter(Boolean));
+
+      setOggi(contrattiOggi.length);
+      setIeri(contrattiIeri.length);
+      setChiusi(contrattiChiusi.length);
+      setDaLavorare(contrattiDaLavorare.length);
+      setConsulentiAttivi(agentiIds.size);
     } catch (e: any) {
       console.error('AdminDashboard metrics error:', e);
       const msg = e?.message || String(e);

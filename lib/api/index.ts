@@ -47,3 +47,20 @@ export type {
   AdminDashboardStats,
   BackofficeDashboardStats,
 } from './dashboard';
+
+// Piani Compenso
+export { PianiCompensoAPI } from './piani-compenso';
+export type {
+  DettaglioPiano,
+  PianoCompensoDto,
+  LineItem,
+  MyPianoCompenso,
+} from './piani-compenso';
+
+// Users
+export { UsersAPI, mapStatoToString, mapRuoloToLabel } from './users';
+export type {
+  UserDto,
+  CreateUserPayload,
+  UpdateUserPayload,
+} from './users';

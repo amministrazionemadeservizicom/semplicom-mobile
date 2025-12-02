@@ -27,6 +27,7 @@ import { AccessDenied } from '../../components/navigation/AccessDenied';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
+import { ContrattiAPI, ContrattoDto } from '../../lib/api';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -154,52 +155,56 @@ export default function AdminContratti() {
   });
   const [saving, setSaving] = useState(false);
 
+  // Map ContrattoDto to local Contratto interface
+  const mapContrattoDto = (c: ContrattoDto): Contratto => {
+    // Map API stato to local stato
+    const mapStato = (stato: string): StatoContratto => {
+      switch (stato) {
+        case 'attivato':
+        case 'ok_inserimento':
+          return 'chiuso';
+        case 'annullato':
+        case 'stornato':
+          return 'annullato';
+        default:
+          return 'in lavorazione';
+      }
+    };
+
+    return {
+      id: c.id,
+      idUtente: c.agente?.id || 0,
+      idOfferta: c.offerta?.id || 0,
+      idPianoCompenso: 0,
+      dataFirma: c.tsFirmato || c.tsCreazione || new Date().toISOString(),
+      importo: c.importoNetto || c.importoLordo || 0,
+      stato: mapStato(c.stato),
+      utente: {
+        nomeCognome: c.agente?.nomeCognome || `${c.nome || ''} ${c.cognome || ''}`.trim(),
+        email: c.agente?.email || c.email,
+      },
+      offerta: {
+        brand: c.offerta?.nomeGestore || c.offerta?.nome || '',
+        categoria: c.commodity || c.offerta?.categoria,
+      },
+      pianoCompenso: { nome: 'Standard' },
+    };
+  };
+
   // Load contratti
   const loadContratti = useCallback(async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await ContrattiAPI.list({ stato: statoFilter !== 'all' ? statoFilter : undefined });
-      // setContratti(response.data || []);
+      // Fetch real data from API
+      const response = await ContrattiAPI.list({
+        size: 100,
+        stato: statoFilter === 'chiuso' ? 'attivato' :
+               statoFilter === 'annullato' ? 'annullato' :
+               statoFilter === 'in lavorazione' ? 'lavorazione' : undefined,
+      });
 
-      // Mock data
-      setContratti([
-        {
-          id: 1,
-          idUtente: 1,
-          idOfferta: 1,
-          idPianoCompenso: 1,
-          dataFirma: '2024-01-15',
-          importo: 1500,
-          stato: 'in lavorazione',
-          utente: { nomeCognome: 'Mario Rossi', email: 'mario@example.com' },
-          offerta: { brand: 'Enel Energia', categoria: 'luce' },
-          pianoCompenso: { nome: 'Standard' },
-        },
-        {
-          id: 2,
-          idUtente: 2,
-          idOfferta: 2,
-          idPianoCompenso: 1,
-          dataFirma: '2024-01-20',
-          importo: 2200,
-          stato: 'chiuso',
-          utente: { nomeCognome: 'Anna Verdi', email: 'anna@example.com' },
-          offerta: { brand: 'Eni Gas', categoria: 'gas' },
-          pianoCompenso: { nome: 'Premium' },
-        },
-        {
-          id: 3,
-          idUtente: 3,
-          idOfferta: 3,
-          idPianoCompenso: 2,
-          dataFirma: '2024-01-25',
-          importo: 800,
-          stato: 'annullato',
-          utente: { nomeCognome: 'Luigi Bianchi', email: 'luigi@example.com' },
-          offerta: { brand: 'TIM', categoria: 'telefonia' },
-          pianoCompenso: { nome: 'Base' },
-        },
-      ]);
+      // Map API response to local interface
+      const mappedContratti = response.content.map(mapContrattoDto);
+      setContratti(mappedContratti);
     } catch (error) {
       console.error('Error loading contratti:', error);
       Alert.alert('Errore', 'Impossibile caricare i contratti');

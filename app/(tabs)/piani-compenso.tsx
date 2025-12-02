@@ -30,6 +30,7 @@ import { AccessDenied } from '../../components/navigation/AccessDenied';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
+import { PianiCompensoAPI, PianoCompensoDto } from '../../lib/api';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -75,54 +76,15 @@ interface Gestore {
   attivo?: boolean;
 }
 
-// Mock data
-const MOCK_PIANI: PianoCompenso[] = [
-  {
-    id: 1,
-    nome: 'Piano Standard Luce',
-    descrizione: 'Piano compenso base per contratti luce',
-    attivo: true,
-    gestore: 'Enel',
-    gestoreId: 1,
-    categoria: 'energia',
-    dettagli: [
-      { tipoOperazione: 'switch', commodity: 'luce', importoFisso: 25, percentuale: 0 },
-      { tipoOperazione: 'subentro', commodity: 'luce', importoFisso: 30, percentuale: 0 },
-    ],
-  },
-  {
-    id: 2,
-    nome: 'Piano Premium Gas',
-    descrizione: 'Piano compenso premium per contratti gas',
-    attivo: true,
-    gestore: 'Eni',
-    gestoreId: 2,
-    categoria: 'energia',
-    dettagli: [
-      { tipoOperazione: 'switch', commodity: 'gas', importoFisso: 30, percentuale: 2 },
-    ],
-  },
-  {
-    id: 3,
-    nome: 'Piano Telco Base',
-    descrizione: 'Piano compenso per contratti telco',
-    attivo: false,
-    gestore: 'Tim',
-    gestoreId: 3,
-    categoria: 'telco',
-    dettagli: [
-      { tipoOperazione: 'nuova_linea', importoFisso: 50, percentuale: 0 },
-      { tipoOperazione: 'portabilita', importoFisso: 40, percentuale: 0 },
-    ],
-  },
-];
-
-const MOCK_GESTORI: Gestore[] = [
+// Default gestori list (will be loaded from API in future)
+const DEFAULT_GESTORI: Gestore[] = [
   { id: 1, nome: 'Enel', categoria: 'energia', attivo: true },
   { id: 2, nome: 'Eni', categoria: 'energia', attivo: true },
   { id: 3, nome: 'Tim', categoria: 'telco', attivo: true },
   { id: 4, nome: 'Edison', categoria: 'energia', attivo: true },
   { id: 5, nome: 'Vodafone', categoria: 'telco', attivo: true },
+  { id: 6, nome: 'A2A', categoria: 'energia', attivo: true },
+  { id: 7, nome: 'Illumia', categoria: 'energia', attivo: true },
 ];
 
 // Componente Card Piano
@@ -528,15 +490,31 @@ function formatOperazione(op: string): string {
   return map[op] || op;
 }
 
+// Map PianoCompensoDto to local PianoCompenso interface
+const mapPianoDto = (dto: PianoCompensoDto): PianoCompenso => ({
+  id: dto.id,
+  nome: dto.nome,
+  descrizione: undefined,
+  attivo: dto.attivo,
+  dataInizio: dto.dal,
+  dataFine: dto.al,
+  dettagli: (dto.dettagli || []).map(d => ({
+    tipoOperazione: d.prodotto || 'switch',
+    importoFisso: d.importo,
+    percentuale: 0,
+    note: d.descr || undefined,
+  })),
+});
+
 // Main component
 export default function PianiCompenso() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { userRole, user } = useAuth();
 
-  const [piani, setPiani] = useState<PianoCompenso[]>(MOCK_PIANI);
-  const [gestori, setGestori] = useState<Gestore[]>(MOCK_GESTORI);
-  const [loading, setLoading] = useState(false);
+  const [piani, setPiani] = useState<PianoCompenso[]>([]);
+  const [gestori, setGestori] = useState<Gestore[]>(DEFAULT_GESTORI);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const [filterAttivi, setFilterAttivi] = useState<'all' | 'active' | 'inactive'>('all');
@@ -574,13 +552,19 @@ export default function PianiCompenso() {
   // Load data
   const loadData = useCallback(async () => {
     setLoading(true);
-    // In produzione: chiamata API
-    // const data = await pianiCompensoApi.listPiani({ attivi: filterAttivi === 'active' });
-    // setPiani(data);
-    setTimeout(() => {
+    try {
+      // Fetch real data from API
+      const attivi = filterAttivi === 'active' ? true :
+                     filterAttivi === 'inactive' ? false : undefined;
+      const data = await PianiCompensoAPI.list(attivi);
+      setPiani(data.map(mapPianoDto));
+    } catch (error) {
+      console.error('Error loading piani compenso:', error);
+      Alert.alert('Errore', 'Impossibile caricare i piani compenso');
+    } finally {
       setLoading(false);
       setRefreshing(false);
-    }, 500);
+    }
   }, [filterAttivi]);
 
   useEffect(() => {

@@ -30,6 +30,7 @@ import { Button } from '../../components/ui/Button';
 import { colors } from '../../styles/colors';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
+import { ContrattiAPI, ContrattoDto as ContrattoApiDto } from '../../lib/api';
 
 // Colori Sempliswitch
 const SEMPLISWITCH_COLORS = {
@@ -341,18 +342,54 @@ export default function ContractDetail() {
   const canEdit = isAdmin || isSuperAdmin || contratto?.stato === 'inserito' || contratto?.stato === 'sospeso';
   const canSeeProvvigioneMaster = userRole === ROLES.MASTER || isAdmin || isSuperAdmin || userRole === ROLES.BACK_OFFICE;
 
+  // Map API response to local interface
+  const mapApiToLocal = (dto: ContrattoApiDto): ContrattoDto => ({
+    id: dto.id,
+    nome: dto.nome,
+    cognome: dto.cognome,
+    ragioneSociale: dto.ragioneSociale,
+    codiceFiscale: dto.codiceFiscale,
+    partitaIva: dto.partitaIva,
+    email: dto.email,
+    telefono: dto.telefono || dto.cellulare,
+    indirizzoFatturazione: dto.indirizzoFatturazione || dto.indirizzoResidenza,
+    indirizzoFornitura: dto.indirizzoFornitura,
+    pod: dto.pod,
+    pdr: dto.pdr,
+    telcoNumber: dto.numeroTelefonico,
+    commodity: dto.commodity,
+    canale: dto.canale,
+    stato: dto.stato as StatoContratto,
+    statoPagamento: dto.statoPagamento,
+    tsInserimento: dto.tsInserimento || dto.tsCreazione,
+    tsFirmato: dto.tsFirmato,
+    tsAttivazione: dto.tsAttivazione,
+    iban: dto.iban,
+    bollettino: dto.pagamentoBollettino,
+    bollettaCartacea: dto.bollettaCartacea,
+    periodoFatturazione: dto.periodoFatturazione,
+    nomeTerzeParti: dto.nomeTerzeParti,
+    cognomeTerzeParti: dto.cognomeTerzeParti,
+    codiceFiscaleTerzeParti: dto.codiceFiscaleTerzeParti,
+    note: dto.note,
+    offerta: dto.offerta,
+    agente: dto.agente,
+    master: dto.master,
+    provvigioneConsulente: dto.provvigioneConsulente,
+    provvigioneMaster: dto.provvigioneMaster,
+    importoLordo: dto.importoLordo,
+    importoNetto: dto.importoNetto,
+  });
+
   // Load contratto
   const loadContratto = useCallback(async () => {
     try {
       setLoading(true);
-      // In produzione: chiamata API
-      // const data = await ContrattiAPI.getById(contractId);
-      // setContratto(data);
-
-      // Mock
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setContratto(MOCK_CONTRATTO);
-      setEditedData(MOCK_CONTRATTO);
+      // Fetch real data from API
+      const data = await ContrattiAPI.getById(Number(contractId));
+      const mapped = mapApiToLocal(data);
+      setContratto(mapped);
+      setEditedData(mapped);
     } catch (error) {
       console.error('Error loading contract:', error);
       Alert.alert('Errore', 'Impossibile caricare i dettagli del contratto');
