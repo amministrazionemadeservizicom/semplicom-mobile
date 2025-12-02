@@ -2,7 +2,12 @@
  * DrawerMenu Component - Menu laterale
  * Stile Sempliswitch: Giallo #F2C927 e Magenta #E6007E
  *
- * Contiene le voci di navigazione aggiuntive non presenti nella tab bar
+ * Mostra solo le pagine accessibili in base al ruolo utente:
+ * - SuperAdmin: tutte le pagine + gestione sistema
+ * - Admin: dashboard admin, contratti, utenti, presenze, offerte
+ * - Master: dashboard, offerte, contratti, nuova pratica, consulenti
+ * - Consulente: dashboard, offerte, contratti, nuova pratica
+ * - BackOffice: dashboard backoffice, coda lavorazione, contratti
  */
 
 import React from 'react';
@@ -19,7 +24,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuth, ROLES } from '../../lib/AuthContext';
+import { useAuth, ROLES, type UserRole } from '../../lib/AuthContext';
 import { spacing, borderRadius } from '../../styles/spacing';
 import { fontSizes, fontWeights } from '../../styles/typography';
 
@@ -37,6 +42,7 @@ const SEMPLISWITCH_COLORS = {
     300: '#D1D5DB',
     400: '#9CA3AF',
     500: '#6B7280',
+    600: '#4B5563',
     700: '#374151',
     800: '#1F2937',
     900: '#111827',
@@ -54,136 +60,187 @@ interface MenuItem {
   icon: keyof typeof Ionicons.glyphMap;
   route?: string;
   action?: () => void;
-  roles?: string[]; // Ruoli che possono vedere questo item
+  roles: UserRole[]; // Ruoli che possono vedere questo item
+  section?: 'main' | 'admin' | 'system' | 'profile';
 }
+
+// Definizione completa delle pagine e dei ruoli che possono accedervi
+const ALL_MENU_ITEMS: MenuItem[] = [
+  // === SEZIONE PRINCIPALE ===
+  // Dashboard - route diversa per ruolo (gestita dinamicamente)
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: 'home-outline',
+    route: '/(tabs)/dashboard', // Route default, verrà sovrascritta
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE, ROLES.BACK_OFFICE],
+    section: 'main',
+  },
+  // Offerte - NON per backoffice
+  {
+    id: 'offerte',
+    label: 'Offerte',
+    icon: 'pricetags-outline',
+    route: '/(tabs)/offerte',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE],
+    section: 'main',
+  },
+  // Contratti - tutti
+  {
+    id: 'contratti',
+    label: 'Contratti',
+    icon: 'document-text-outline',
+    route: '/(tabs)/contratti',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE, ROLES.BACK_OFFICE],
+    section: 'main',
+  },
+  // Nuova Pratica - NON per backoffice
+  {
+    id: 'nuova-pratica',
+    label: 'Nuova Pratica',
+    icon: 'add-circle-outline',
+    route: '/(tabs)/nuova-pratica',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE],
+    section: 'main',
+  },
+  // Coda Lavorazione - SOLO backoffice
+  {
+    id: 'coda-lavorazione',
+    label: 'Coda Lavorazione',
+    icon: 'list-outline',
+    route: '/(tabs)/backoffice',
+    roles: [ROLES.BACK_OFFICE],
+    section: 'main',
+  },
+
+  // === SEZIONE AMMINISTRAZIONE ===
+  // Gestione Contratti Admin
+  {
+    id: 'admin-contratti',
+    label: 'Gestione Contratti',
+    icon: 'documents-outline',
+    route: '/(tabs)/admin-contratti',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN],
+    section: 'admin',
+  },
+  // Gestione Utenti
+  {
+    id: 'users',
+    label: 'Gestione Utenti',
+    icon: 'people-outline',
+    route: '/(tabs)/users',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN],
+    section: 'admin',
+  },
+  // Presenze
+  {
+    id: 'presenze',
+    label: 'Presenze',
+    icon: 'calendar-outline',
+    route: '/(tabs)/admin-attendance',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN],
+    section: 'admin',
+  },
+  // Gestione Offerte Admin
+  {
+    id: 'admin-offerte',
+    label: 'Gestione Offerte',
+    icon: 'pricetag-outline',
+    route: '/(tabs)/admin-offers',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER],
+    section: 'admin',
+  },
+  // Consulenti (per Master)
+  {
+    id: 'consulenti',
+    label: 'I Miei Consulenti',
+    icon: 'people-circle-outline',
+    route: '/(tabs)/consulenti',
+    roles: [ROLES.MASTER],
+    section: 'admin',
+  },
+
+  // === SEZIONE SISTEMA (Solo SuperAdmin) ===
+  {
+    id: 'agenzie',
+    label: 'Agenzie',
+    icon: 'business-outline',
+    route: '/(tabs)/agenzie',
+    roles: [ROLES.SUPERADMIN],
+    section: 'system',
+  },
+  {
+    id: 'gestori',
+    label: 'Gestori',
+    icon: 'briefcase-outline',
+    route: '/(tabs)/gestori',
+    roles: [ROLES.SUPERADMIN],
+    section: 'system',
+  },
+  {
+    id: 'impostazioni',
+    label: 'Impostazioni',
+    icon: 'settings-outline',
+    route: '/(tabs)/impostazioni',
+    roles: [ROLES.SUPERADMIN],
+    section: 'system',
+  },
+
+  // === SEZIONE PROFILO (tutti) ===
+  {
+    id: 'profilo',
+    label: 'Profilo',
+    icon: 'person-outline',
+    route: '/(tabs)/profilo',
+    roles: [ROLES.SUPERADMIN, ROLES.ADMIN, ROLES.MASTER, ROLES.CONSULENTE, ROLES.BACK_OFFICE],
+    section: 'profile',
+  },
+];
 
 export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, userRole, isSuperAdmin, isAdmin, logout } = useAuth();
 
-  // Menu items basati sul ruolo
-  const getMenuItems = (): MenuItem[] => {
-    const items: MenuItem[] = [];
+  // Filtra menu items in base al ruolo
+  const getMenuItemsForRole = (): MenuItem[] => {
+    if (!userRole) return [];
 
-    // Dashboard (sempre visibile, ma route diversa per ruolo)
-    items.push({
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: 'home-outline',
-      route: isSuperAdmin
-        ? '/(tabs)/sa-dashboard'
-        : isAdmin
-          ? '/(tabs)/admin-dashboard'
-          : userRole === ROLES.BACK_OFFICE
-            ? '/(tabs)/backoffice'
-            : '/(tabs)/dashboard',
+    // Filtra gli items per il ruolo corrente
+    const filteredItems = ALL_MENU_ITEMS.filter((item) =>
+      item.roles.includes(userRole)
+    );
+
+    // Aggiusta la route della dashboard in base al ruolo
+    return filteredItems.map((item) => {
+      if (item.id === 'dashboard') {
+        let dashboardRoute = '/(tabs)/dashboard';
+
+        if (isSuperAdmin) {
+          dashboardRoute = '/(tabs)/sa-dashboard';
+        } else if (isAdmin) {
+          dashboardRoute = '/(tabs)/admin-dashboard';
+        } else if (userRole === ROLES.MASTER) {
+          dashboardRoute = '/(tabs)/master-dashboard';
+        } else if (userRole === ROLES.BACK_OFFICE) {
+          dashboardRoute = '/(tabs)/backoffice';
+        }
+
+        return { ...item, route: dashboardRoute };
+      }
+      return item;
     });
+  };
 
-    // Offerte (tutti tranne backoffice)
-    if (userRole !== ROLES.BACK_OFFICE) {
-      items.push({
-        id: 'offerte',
-        label: 'Offerte',
-        icon: 'pricetags-outline',
-        route: '/(tabs)/offerte',
-      });
-    }
+  // Raggruppa items per sezione
+  const groupedItems = () => {
+    const items = getMenuItemsForRole();
+    const main = items.filter((i) => i.section === 'main');
+    const admin = items.filter((i) => i.section === 'admin');
+    const system = items.filter((i) => i.section === 'system');
+    const profile = items.filter((i) => i.section === 'profile');
 
-    // Contratti (tutti)
-    items.push({
-      id: 'contratti',
-      label: 'Contratti',
-      icon: 'document-text-outline',
-      route: '/(tabs)/contratti',
-    });
-
-    // Nuova Pratica (tutti tranne backoffice)
-    if (userRole !== ROLES.BACK_OFFICE) {
-      items.push({
-        id: 'nuova-pratica',
-        label: 'Nuova Pratica',
-        icon: 'add-circle-outline',
-        route: '/(tabs)/nuova-pratica',
-      });
-    }
-
-    // Messaggi (TODO: da implementare)
-    items.push({
-      id: 'messaggi',
-      label: 'Messaggi',
-      icon: 'chatbubbles-outline',
-      route: undefined, // Non ancora implementato
-    });
-
-    // Solo per Admin/SuperAdmin
-    if (isAdmin || isSuperAdmin) {
-      items.push({
-        id: 'divider-admin',
-        label: '',
-        icon: 'remove',
-      });
-
-      items.push({
-        id: 'utenti',
-        label: 'Gestione Utenti',
-        icon: 'people-outline',
-        route: undefined, // TODO: implementare
-      });
-
-      items.push({
-        id: 'agenzie',
-        label: 'Agenzie',
-        icon: 'business-outline',
-        route: undefined, // TODO: implementare
-      });
-    }
-
-    // Solo per SuperAdmin
-    if (isSuperAdmin) {
-      items.push({
-        id: 'gestori',
-        label: 'Gestori',
-        icon: 'briefcase-outline',
-        route: undefined, // TODO: implementare
-      });
-
-      items.push({
-        id: 'impostazioni',
-        label: 'Impostazioni',
-        icon: 'settings-outline',
-        route: undefined, // TODO: implementare
-      });
-    }
-
-    // Divider
-    items.push({
-      id: 'divider-profile',
-      label: '',
-      icon: 'remove',
-    });
-
-    // Profilo
-    items.push({
-      id: 'profilo',
-      label: 'Profilo',
-      icon: 'person-outline',
-      route: '/(tabs)/profilo',
-    });
-
-    // Logout
-    items.push({
-      id: 'logout',
-      label: 'Esci',
-      icon: 'log-out-outline',
-      action: async () => {
-        await logout();
-        router.replace('/login');
-        onClose();
-      },
-    });
-
-    return items;
+    return { main, admin, system, profile };
   };
 
   const handleItemPress = (item: MenuItem) => {
@@ -195,7 +252,17 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
     }
   };
 
-  const menuItems = getMenuItems();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/login');
+      onClose();
+    } catch (error) {
+      console.error('Logout error:', error);
+      router.replace('/login');
+      onClose();
+    }
+  };
 
   // Genera le iniziali dall'utente
   const getInitials = () => {
@@ -207,6 +274,7 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
     return parts[0][0].toUpperCase();
   };
 
+  // Label del ruolo in italiano
   const getRoleLabel = () => {
     switch (userRole) {
       case ROLES.SUPERADMIN:
@@ -223,6 +291,48 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
         return 'Utente';
     }
   };
+
+  // Colore del badge ruolo
+  const getRoleBadgeColor = () => {
+    switch (userRole) {
+      case ROLES.SUPERADMIN:
+        return '#DC2626'; // Red
+      case ROLES.ADMIN:
+        return '#7C3AED'; // Purple
+      case ROLES.MASTER:
+        return '#2563EB'; // Blue
+      case ROLES.CONSULENTE:
+        return '#059669'; // Green
+      case ROLES.BACK_OFFICE:
+        return '#D97706'; // Amber
+      default:
+        return SEMPLISWITCH_COLORS.gray[500];
+    }
+  };
+
+  const { main, admin, system, profile } = groupedItems();
+
+  const renderMenuItem = (item: MenuItem) => (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.menuItem}
+      onPress={() => handleItemPress(item)}
+      activeOpacity={0.7}
+      accessibilityLabel={item.label}
+    >
+      <Ionicons
+        name={item.icon}
+        size={22}
+        color={SEMPLISWITCH_COLORS.gray[700]}
+      />
+      <Text style={styles.menuItemText}>{item.label}</Text>
+      <Ionicons
+        name="chevron-forward"
+        size={18}
+        color={SEMPLISWITCH_COLORS.gray[400]}
+      />
+    </TouchableOpacity>
+  );
 
   return (
     <Modal
@@ -252,7 +362,9 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
                 <Text style={styles.userName} numberOfLines={1}>
                   {user?.nomeCognome || 'Utente'}
                 </Text>
-                <Text style={styles.userRole}>{getRoleLabel()}</Text>
+                <View style={[styles.roleBadge, { backgroundColor: getRoleBadgeColor() }]}>
+                  <Text style={styles.roleBadgeText}>{getRoleLabel()}</Text>
+                </View>
                 {user?.agenzia && (
                   <Text style={styles.userAgenzia} numberOfLines={1}>
                     {user.agenzia.ragioneSociale}
@@ -279,53 +391,59 @@ export function DrawerMenu({ visible, onClose }: DrawerMenuProps) {
             contentContainerStyle={styles.menuListContent}
             showsVerticalScrollIndicator={false}
           >
-            {menuItems.map((item) => {
-              // Render divider
-              if (item.id.startsWith('divider')) {
-                return (
-                  <View key={item.id} style={styles.divider} />
-                );
-              }
+            {/* Sezione Principale */}
+            {main.length > 0 && (
+              <View style={styles.menuSection}>
+                <Text style={styles.sectionTitle}>Menu</Text>
+                {main.map(renderMenuItem)}
+              </View>
+            )}
 
-              const isDisabled = !item.route && !item.action;
+            {/* Sezione Amministrazione */}
+            {admin.length > 0 && (
+              <View style={styles.menuSection}>
+                <View style={styles.divider} />
+                <Text style={styles.sectionTitle}>Amministrazione</Text>
+                {admin.map(renderMenuItem)}
+              </View>
+            )}
 
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  style={[
-                    styles.menuItem,
-                    isDisabled && styles.menuItemDisabled,
-                  ]}
-                  onPress={() => !isDisabled && handleItemPress(item)}
-                  disabled={isDisabled}
-                  accessibilityLabel={item.label}
-                >
-                  <Ionicons
-                    name={item.icon}
-                    size={22}
-                    color={
-                      isDisabled
-                        ? SEMPLISWITCH_COLORS.gray[300]
-                        : item.id === 'logout'
-                          ? SEMPLISWITCH_COLORS.magenta
-                          : SEMPLISWITCH_COLORS.gray[700]
-                    }
-                  />
-                  <Text
-                    style={[
-                      styles.menuItemText,
-                      isDisabled && styles.menuItemTextDisabled,
-                      item.id === 'logout' && styles.menuItemTextLogout,
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
-                  {isDisabled && (
-                    <Text style={styles.comingSoon}>Presto</Text>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
+            {/* Sezione Sistema (Solo SuperAdmin) */}
+            {system.length > 0 && (
+              <View style={styles.menuSection}>
+                <View style={styles.divider} />
+                <Text style={styles.sectionTitle}>Sistema</Text>
+                {system.map(renderMenuItem)}
+              </View>
+            )}
+
+            {/* Sezione Profilo */}
+            {profile.length > 0 && (
+              <View style={styles.menuSection}>
+                <View style={styles.divider} />
+                {profile.map(renderMenuItem)}
+              </View>
+            )}
+
+            {/* Logout */}
+            <View style={styles.menuSection}>
+              <View style={styles.divider} />
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleLogout}
+                activeOpacity={0.7}
+                accessibilityLabel="Esci"
+              >
+                <Ionicons
+                  name="log-out-outline"
+                  size={22}
+                  color={SEMPLISWITCH_COLORS.magenta}
+                />
+                <Text style={[styles.menuItemText, styles.menuItemTextLogout]}>
+                  Esci
+                </Text>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
 
           {/* Footer */}
@@ -400,15 +518,22 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold as any,
     color: SEMPLISWITCH_COLORS.gray[900],
   },
-  userRole: {
-    fontSize: fontSizes.sm,
-    color: SEMPLISWITCH_COLORS.gray[700],
-    marginTop: 2,
+  roleBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[0.5],
+    borderRadius: borderRadius.full,
+    marginTop: spacing[1],
+  },
+  roleBadgeText: {
+    fontSize: fontSizes.xs,
+    fontWeight: fontWeights.medium as any,
+    color: SEMPLISWITCH_COLORS.white,
   },
   userAgenzia: {
     fontSize: fontSizes.xs,
-    color: SEMPLISWITCH_COLORS.gray[500],
-    marginTop: 2,
+    color: SEMPLISWITCH_COLORS.gray[600],
+    marginTop: spacing[1],
   },
   closeButton: {
     width: 36,
@@ -421,7 +546,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuListContent: {
-    padding: spacing[2],
+    paddingVertical: spacing[2],
+  },
+  menuSection: {
+    paddingHorizontal: spacing[2],
+  },
+  sectionTitle: {
+    fontSize: fontSizes.xs,
+    fontWeight: fontWeights.semibold as any,
+    color: SEMPLISWITCH_COLORS.gray[500],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    marginTop: spacing[1],
   },
   menuItem: {
     flexDirection: 'row',
@@ -431,28 +569,15 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     marginVertical: spacing[0.5],
   },
-  menuItemDisabled: {
-    opacity: 0.6,
-  },
   menuItemText: {
     fontSize: fontSizes.base,
     color: SEMPLISWITCH_COLORS.gray[700],
     marginLeft: spacing[3],
     flex: 1,
   },
-  menuItemTextDisabled: {
-    color: SEMPLISWITCH_COLORS.gray[400],
-  },
   menuItemTextLogout: {
     color: SEMPLISWITCH_COLORS.magenta,
-  },
-  comingSoon: {
-    fontSize: fontSizes.xs,
-    color: SEMPLISWITCH_COLORS.gray[400],
-    backgroundColor: SEMPLISWITCH_COLORS.gray[100],
-    paddingHorizontal: spacing[2],
-    paddingVertical: spacing[0.5],
-    borderRadius: borderRadius.sm,
+    fontWeight: fontWeights.medium as any,
   },
   divider: {
     height: 1,
